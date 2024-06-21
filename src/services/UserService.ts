@@ -1,17 +1,17 @@
+import { Service} from "typedi";
+import { UserRepository } from "../repository/UserRepository";
+import { LoginBody } from "../types/login-body";
+import { RegisterBody } from "../types/register-body";
 
-class UserService {
+@Service()
+export class UserService {
+  constructor(private userRepository: UserRepository) {}
 
-  constructor(
-    public readonly name: string,
-    public readonly password: string,
-    public readonly email: string,
-  ) { }
-    
-    public async login(email:string,password :string) {
-        
-    }
+  public async login(body:LoginBody) {
+    await this.userRepository.login(body);
+  }
 
-    public async register(name:string,email:string,password:string) {
-        
-    }
+  public async register(body:RegisterBody) {
+    await this.userRepository.register(body);
+  }
 }

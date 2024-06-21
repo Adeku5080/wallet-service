@@ -1,7 +1,9 @@
-import express, { Express, Request, Response, Application } from "express";
-import * as dotenv from "dotenv";
+import express, { Application } from 'express';
+import * as dotenv from 'dotenv';
+import 'reflect-metadata';
+import { createExpressServer } from 'routing-controllers';
+import { AuthController } from './controller/AuthController'; // Ensure this path is correct
 
-//For env File
 dotenv.config();
 
 const app: Application = express();
@@ -9,11 +11,16 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 
-//connect to db
+// Database connection logic here
+// connectToDatabase();
 
-//routes
+// Create express server and register controllers
+const routingControllersApp = createExpressServer({
+  routePrefix: '/api',
+  controllers: [AuthController], // Register your controllers
+});
 
-app.listen(port, () => {
-
-  console.log(`Server starting at port ${port}`);
+// Start the server
+routingControllersApp.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
