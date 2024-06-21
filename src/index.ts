@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const app: Application = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 5000;
 
 app.use(express.json());
 
@@ -14,5 +14,6 @@ app.use(express.json());
 //routes
 
 app.listen(port, () => {
+
   console.log(`Server starting at port ${port}`);
 });
