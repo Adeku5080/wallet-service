@@ -3,7 +3,8 @@ import * as dotenv from 'dotenv';
 //For env File
 dotenv.config();
 
-module.exports = {
+
+const knexConfig = {
   development: {
     client: 'mysql2',
     connection: {
@@ -18,3 +19,5 @@ module.exports = {
     },
   },
 };
+
+export default knexConfig;

@@ -1,23 +1,29 @@
 import express, { Application } from 'express';
 import * as dotenv from 'dotenv';
 import 'reflect-metadata';
-import { createExpressServer } from 'routing-controllers';
-import { AuthController } from './controller/AuthController'; // Ensure this path is correct
+import { Container } from 'typedi';
+import { createExpressServer, useContainer } from 'routing-controllers';
+import { AuthController } from './controller/AuthController';
+import { AccountController } from './controller/AccountController';
+import { TransactionController } from './controller/TransactionController';
+import { errorHandler } from './middlewares/error';
+// import { AuthMiddleware } from './middlewares/auth-middleware';
 
 dotenv.config();
+
+useContainer(Container);
 
 const app: Application = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
 
-// Database connection logic here
-// connectToDatabase();
-
+app.use(errorHandler)
 // Create express server and register controllers
 const routingControllersApp = createExpressServer({
   routePrefix: '/api',
-  controllers: [AuthController], // Register your controllers
+  controllers: [AuthController, TransactionController, AccountController],
+  // middlewares: [AuthMiddleware],
 });
 
 // Start the server

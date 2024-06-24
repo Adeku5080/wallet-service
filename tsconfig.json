@@ -11,5 +11,6 @@
     "strictPropertyInitialization": false,
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "include": ["src/**/*", "src/types/express.d.ts", "src/knexfile.ts"]
 }
