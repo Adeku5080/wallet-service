@@ -3,6 +3,7 @@ import { Middleware, ExpressMiddlewareInterface } from 'routing-controllers';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/jwt-payload'; // Adjust path as per your project structure
 import { Service } from 'typedi';
+import { CustomError } from '../errors/customError';
 
 @Service()
 export class AuthMiddleware implements ExpressMiddlewareInterface {
@@ -11,13 +12,12 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
 
     if (!authorizationHeader) {
       console.log('No authorization header provided');
-      throw Error('No authorization header');
+      throw new CustomError('You are not authenticated', 400);
     }
 
     const token = authorizationHeader.split(' ')[1];
     if (!token) {
-      console.log('Authentication failed: No token provided');
-      return;
+      throw new CustomError('You are not authenticated', 400);
     }
 
     try {
@@ -27,7 +27,7 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
       }
 
       const payload = jwt.verify(token, secretKey) as JwtPayload;
-        req.headers['id'] = payload.id;
+      req.headers['id'] = payload.id;
       next();
     } catch (err) {
       console.log('Invalid token:', err);

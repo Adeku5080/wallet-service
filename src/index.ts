@@ -6,7 +6,10 @@ import { createExpressServer, useContainer } from 'routing-controllers';
 import { AuthController } from './controller/AuthController';
 import { AccountController } from './controller/AccountController';
 import { TransactionController } from './controller/TransactionController';
-import { errorHandler } from './middlewares/error';
+import 'express-async-errors';
+import { CustomErrorHandler } from './middlewares/error';
+import { AuthMiddleware } from './middlewares/auth-middleware';
+
 // import { AuthMiddleware } from './middlewares/auth-middleware';
 
 dotenv.config();
@@ -18,12 +21,11 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 
-app.use(errorHandler)
 // Create express server and register controllers
 const routingControllersApp = createExpressServer({
   routePrefix: '/api',
   controllers: [AuthController, TransactionController, AccountController],
-  // middlewares: [AuthMiddleware],
+  middlewares: [AuthMiddleware, CustomErrorHandler],
 });
 
 // Start the server

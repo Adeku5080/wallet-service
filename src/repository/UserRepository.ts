@@ -18,7 +18,7 @@ export class UserRepository implements Repository{
   create(user: RegisterBody) {
     return db('users').insert(user)
   }
-  update() {
+update() {
   }
   delete() {
   }

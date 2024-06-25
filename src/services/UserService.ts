@@ -5,10 +5,9 @@ import { RegisterBody } from '../types/register-body';
 import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
 import { UserResponseInterface } from '../types/user-response';
-import { Req } from 'routing-controllers';
 import { compare } from 'bcryptjs';
 import * as bcrypt from 'bcryptjs';
-
+import { CustomError } from '../errors/customError';
 
 dotenv.config();
 
@@ -22,24 +21,34 @@ export class UserService {
       const user = await this.userRepository.findBy({ email });
 
       if (!user) {
-        console.log('user with the given credentials is not available');
+        throw new CustomError(
+          'User with these credentials does not exist',
+          400,
+        );
       }
 
       const isPasswordCorrect = await compare(password, user.password);
 
       if (!isPasswordCorrect) {
-        console.log('invalid credentials');
-        return;
+        throw new CustomError('Email or Password is incorrect', 400);
       }
 
       return user;
     } catch (err) {
       console.log(err);
+      throw err;
     }
   }
 
   public async register(body: RegisterBody) {
     try {
+      //check if user already exists
+      const existingUser = await this.userRepository.findBy({
+        email: body.email,
+      });
+      if (existingUser) {
+        throw new CustomError('Email already exists', 400);
+      }
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(body.password, salt);
 
@@ -49,6 +58,7 @@ export class UserService {
       return await this.userRepository.findBy({ id });
     } catch (err) {
       console.log(err);
+      throw err;
     }
   }
 
@@ -64,7 +74,7 @@ export class UserService {
 
   buildUserResponse(user: any): UserResponseInterface {
     return {
-      user: {
+      user:{
         ...user,
         token: this.generateJwtToken(user),
       },

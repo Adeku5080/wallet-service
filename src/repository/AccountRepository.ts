@@ -22,7 +22,9 @@ export class AccountRepository implements Repository {
 
   delete() {}
 
-  findAll() {}
+  findAll(params:FindByParams):any {
+     return db('accounts').where(params)
+  }
 }
 
 //account name,
