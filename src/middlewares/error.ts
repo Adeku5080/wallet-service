@@ -16,6 +16,7 @@ export class CustomErrorHandler implements ExpressErrorMiddlewareInterface {
         message: err.message,
       });
     } else {
+      console.log({err})
       res.status(500).json({
         status: 'error',
         message: 'An unexpected error occurred',

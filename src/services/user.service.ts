@@ -71,6 +71,7 @@ export class UserService {
       id: user.id,
       email: user.email,
     };
+    
     return this.jwt.generateToken(payload);
   }
 

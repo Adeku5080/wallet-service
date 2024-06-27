@@ -1,5 +1,3 @@
-
-
 import express, { Application } from 'express';
 import * as dotenv from 'dotenv';
 import 'reflect-metadata';
@@ -28,7 +26,7 @@ app.use(bodyParser.json());
 useExpressServer(app, {
   routePrefix: '/api',
   controllers: [UserController, AccountController],
-  middlewares: [AuthMiddleware, CustomErrorHandler,CheckIfUserIsBlacklisted],
+  middlewares: [AuthMiddleware, CustomErrorHandler, CheckIfUserIsBlacklisted],
   defaultErrorHandler: false, // disable default error handler if using a custom one
 });
 

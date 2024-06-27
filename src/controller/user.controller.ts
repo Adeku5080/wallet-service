@@ -11,10 +11,8 @@ import { RegisterDto } from '../dto/register-dto';
 import { Service } from 'typedi';
 import { Response } from 'express';
 import { CheckIfUserIsBlacklisted } from '../middlewares/check-if-user-is-blacklisted';
-import { AuthMiddleware } from '../middlewares/auth.middleware';
 
 @Service()
-@UseBefore(AuthMiddleware)
 @JsonController('/auth')
 export class UserController {
   constructor(private userService: UserService) {}
