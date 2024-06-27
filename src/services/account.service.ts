@@ -1,29 +1,30 @@
 import { Service } from 'typedi';
-import { AccountRepository } from '../repository/AccountRepository';
+import { AccountRepository } from '../repository/account.repository';
 import { Account } from '../types/acount-type';
-import { UserRepository } from '../repository/UserRepository';
-import { countryCurrencyMap } from '../helpers/countryCurrencyMap';
+import { UserRepository } from '../repository/user.repository';
+import { countryCurrencyMap } from '../helpers/country-currency-map';
 import { Recepient } from '../types/recepient';
 import Redis from 'ioredis';
 import { AccountResponseInterface } from '../types/account-response';
 import { updateAccountDto } from '../dto/update-account-dto';
-import { CustomError } from '../errors/customError';
+import { CustomError } from '../errors/custom-error';
+import { TransactionRepistory } from '../repository/transaction.repository';
 
 @Service()
 export class AccountService {
   constructor(
     private accountRepository: AccountRepository,
     private userRepository: UserRepository,
+    private transactionRepository: TransactionRepistory,
   ) {}
 
-  public async createAccount(id: any) {
+  //todo: type for id
+  public async createAccount(id: number) {
     try {
-      const accountNumber = this.generateAccountNumber();
-
       const user = await this.userRepository.findBy({ id });
 
       if (!user) {
-        console.log('user with this id doesnt exist');
+        throw new CustomError('User with this id doesnt exist', 400);
       }
 
       //check if user already has an account
@@ -31,14 +32,16 @@ export class AccountService {
         userId: id,
       });
       if (alreadyHasAnAccount) {
-        throw new CustomError('this user already has an existing account', 401);
+        throw new CustomError('This user already has an existing account', 400);
       }
 
       let currency = countryCurrencyMap[user.country];
 
       if (!currency) {
-        throw new CustomError('invalid currency', 401);
+        throw new CustomError('Invalid currency', 400);
       }
+
+      const accountNumber = this.generateAccountNumber();
 
       const account = {
         accountName: user.name,
@@ -47,25 +50,28 @@ export class AccountService {
         userId: user.id,
         currency,
       };
+
       const [accountId] = await this.accountRepository.create(account);
-      return await this.accountRepository.findBy({ id: accountId });
+      const newAccount = await this.accountRepository.findBy({ id: accountId });
+      return this.buildAccountResponse(newAccount);
     } catch (err) {
       throw err;
     }
   }
 
-  public async withdrawFunds(id: any, body: updateAccountDto) {
+  //todo: use actual types
+  public async withdrawFunds(id: number, body: updateAccountDto) {
     let redis: Redis;
     const key = `account-withdrawal-${id}`;
 
+    //todo: redis class
     try {
       redis = new Redis({
         host: '127.0.0.1',
         port: 6379,
       });
     } catch (error) {
-      console.error('Error initializing Redis:', error);
-      return;
+      throw new CustomError('server error', 500);
     }
 
     try {
@@ -73,28 +79,46 @@ export class AccountService {
       if (!isSet) {
         throw new CustomError(
           'you cannot perform two withdrawals concurrently',
-          401,
+          400,
         );
       }
     } catch (err) {
       console.error('Error setting Redis key:', err);
-      throw err;
+      throw new CustomError('server error', 500);
     }
 
     try {
       // Fetch account details
       const account = await this.accountRepository.findBy({ id });
+      if (!account) {
+        throw new CustomError('Account with this Id does not exist', 400);
+      }
       // Check if account balance is sufficient
       if (account.balance <= body.amount) {
-        throw new CustomError('insufficient balance', 401);
+        throw new CustomError('insufficient balance', 400);
       }
+
+      const transaction = {
+        transactionType: 'withdrawal',
+        amount: body.amount,
+        userId: id,
+        accountId: account.id,
+        currency: account.currency,
+      };
+
+      //creat transaction
+      await this.transactionRepository.create(transaction);
 
       // Update account balance
       const newBalance = account.balance - Number(body.amount);
       const changes = { balance: newBalance };
-      await this.accountRepository.update(id, changes);
+      const updatedAccount = await this.accountRepository.update(id, changes);
+      return this.buildAccountResponse(updatedAccount);
+
+      //create trasanction
 
       // TODO: send to a withdrawal source
+      //TODO: explain how this will happen
     } catch (err) {
       console.error('Error during withdrawal:', err);
       throw err;
@@ -102,31 +126,44 @@ export class AccountService {
       try {
         await redis.del(key);
       } catch (err) {
-        console.error('Error clearing Redis key:', err);
-        throw err;
+        throw new CustomError('server error', 500);
       }
     }
   }
 
-  public async fundAccount(id: any, body: updateAccountDto) {
-    //accounId
+  public async fundAccount(id: number, body: updateAccountDto) {
     try {
       const account = await this.accountRepository.findBy({ id });
+      if (!account) {
+        throw new CustomError('Account with this Id does not exist', 400);
+      }
       const newBalance = account.balance + body.amount;
 
       const changes = {
         balance: newBalance,
       };
 
-      return await this.accountRepository.update(id, changes);
+      //create a transaction
+      const transaction = {
+        transactionType: 'withdrawal',
+        amount: body.amount,
+        userId: id,
+        accountId: account.id,
+        currency: account.currency,
+      };
+
+      await this.transactionRepository.create(transaction);
+
+      //update account
+      const updatedAccount = await this.accountRepository.update(id, changes);
+      return this.buildAccountResponse(updatedAccount);
     } catch (err) {
-      console.log(err);
       throw err;
     }
     //integrate paystack to initiate the debit
   }
 
-  public async transferFunds(id: any, body: updateAccountDto) {
+  public async transferFunds(id: number, body: updateAccountDto) {
     let redis: Redis;
     const key = `account-transfer-${id}`;
     try {
@@ -138,20 +175,35 @@ export class AccountService {
       if (!isSet) {
         throw new CustomError(
           'you cannot perform two withdrawals concurrently',
-          401,
+          400,
         );
       }
 
       // Fetch account details
       const account = await this.accountRepository.findBy({ id });
-      if (account.balance <= body.amount) {
-        throw new CustomError('insufficient balance', 401);
+      if (!account) {
+        throw new CustomError('Account with this Id does not exist', 400);
       }
+      if (account.balance <= body.amount) {
+        throw new CustomError('insufficient balance', 400);
+      }
+
+      //create a transaction
+      const transaction = {
+        transactionType: 'withdrawal',
+        amount: body.amount,
+        userId: id,
+        accountId: account.id,
+        currency: account.currency,
+      };
+
+      await this.transactionRepository.create(transaction);
 
       // Update account balance
       const newBalance = account.balance - body.amount;
       const changes = { balance: newBalance };
-      return await this.accountRepository.update(id, changes);
+      const updatedAccount = this.accountRepository.update(id, changes);
+      return this.buildAccountResponse(updatedAccount);
 
       // TODO: Implement logic to transfer amount to the recipient
     } catch (err) {
@@ -160,25 +212,27 @@ export class AccountService {
       // Clear the Redis key
       try {
       } catch (err) {
-        console.error('Error clearing Redis key:', err);
         throw err;
       }
     }
   }
 
-  public async getAllAccounts(id: any) {
+  public async getAllAccounts(id: number) {
     return await this.accountRepository.findAll({ userId: id });
   }
 
-  public async getAccountBalance(id: any) {
+  public async getAccountBalance(id: number) {
     const account = await this.accountRepository.findBy({ id });
+    if (!account) {
+      throw new CustomError('Account with this Id does not exist', 400);
+    }
 
     return account.balance;
   }
+  // todo: account should 10 digit numbers
+  // add bank name and bank code to account table.
   private generateAccountNumber = () => {
-    const timestamp = Date.now();
-    const randomNum = Math.floor(Math.random() * 1000000);
-    return `ACCT-${timestamp}-${randomNum}`;
+    return Math.floor(1000000000 + Math.random() * 9000000000);
   };
 
   buildAccountResponse(account: any): AccountResponseInterface {

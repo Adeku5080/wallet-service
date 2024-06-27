@@ -1,16 +1,18 @@
+
+
 import express, { Application } from 'express';
 import * as dotenv from 'dotenv';
 import 'reflect-metadata';
 import { Container } from 'typedi';
-import { createExpressServer, useContainer } from 'routing-controllers';
-import { AuthController } from './controller/AuthController';
-import { AccountController } from './controller/AccountController';
-import { TransactionController } from './controller/TransactionController';
+import { useExpressServer, useContainer } from 'routing-controllers';
+import { AccountController } from './controller/account.controller';
+import { TransactionController } from './controller/transaction.controller';
 import 'express-async-errors';
 import { CustomErrorHandler } from './middlewares/error';
-import { AuthMiddleware } from './middlewares/auth-middleware';
-
-// import { AuthMiddleware } from './middlewares/auth-middleware';
+import { AuthMiddleware } from './middlewares/auth.middleware';
+import { CheckIfUserIsBlacklisted } from './middlewares/check-if-user-is-blacklisted';
+import bodyParser from 'body-parser';
+import { UserController } from './controller/user.controller';
 
 dotenv.config();
 
@@ -19,16 +21,18 @@ useContainer(Container);
 const app: Application = express();
 const port = process.env.PORT || 5000;
 
-app.use(express.json());
+// Use the JSON body parser middleware globally
+app.use(bodyParser.json());
 
 // Create express server and register controllers
-const routingControllersApp = createExpressServer({
+useExpressServer(app, {
   routePrefix: '/api',
-  controllers: [AuthController, TransactionController, AccountController],
-  middlewares: [AuthMiddleware, CustomErrorHandler],
+  controllers: [UserController, AccountController],
+  middlewares: [AuthMiddleware, CustomErrorHandler,CheckIfUserIsBlacklisted],
+  defaultErrorHandler: false, // disable default error handler if using a custom one
 });
 
 // Start the server
-routingControllersApp.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

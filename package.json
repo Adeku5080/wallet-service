@@ -7,7 +7,7 @@
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "build": "npx tsc",
-    "test": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
+    "test": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --require ts-node/register 'tests/**/*.ts'",
     "knex": "knex --knexfile knexfile.ts",
     "rollback": "npm run knex migrate:rollback",
     "migrate:make": "npm run knex migrate:make -- -x ts",
@@ -19,8 +19,10 @@
   "dependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/body-parser": "^1.19.5",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/sinon": "^17.0.3",
+    "@types/sinon-chai": "^3.2.12",
     "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
@@ -37,6 +39,7 @@
     "reflect-metadata": "^0.2.2",
     "routing-controllers": "^0.10.4",
     "sinon": "^18.0.0",
+    "sinon-chai": "^3.7.0",
     "typedi": "^0.10.0"
   },
   "devDependencies": {
@@ -48,7 +51,7 @@
     "chai": "^5.1.1",
     "cross-env": "^7.0.3",
     "express": "^4.19.2",
-    "mocha": "^10.5.0",
+    "mocha": "^10.5.1",
     "nodemon": "^3.1.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.2"

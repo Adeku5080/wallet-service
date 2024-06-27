@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import knex from 'knex';
 import { Account } from '../types/acount-type';
-import knexConfig from '../knexfile';
+import knexConfig from '../../knexfile';
 import { FindByParams, Repository } from '../interface/repository.interface';
 
 const db = knex(knexConfig.development);
@@ -16,8 +16,9 @@ export class AccountRepository implements Repository {
     return db('accounts').insert(account);
   }
 
-  update(id:any, changes:any) {
-    return db('accounts').where('id',id).update(changes)
+  async update(id:any, changes:any) {
+    await db('accounts').where('id', id).update(changes);
+    return db('accounts').where({ id }).first(); 
   }
 
   delete() {}

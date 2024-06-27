@@ -3,7 +3,7 @@ import {
   ExpressErrorMiddlewareInterface,
 } from 'routing-controllers';
 import { NextFunction, Request, Response } from 'express';
-import { CustomError } from '../errors/customError';
+import { CustomError } from '../errors/custom-error';
 import { Service } from 'typedi';
 
 @Service()

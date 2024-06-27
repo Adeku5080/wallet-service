@@ -1,19 +1,21 @@
+// userService.ts
+
 import { Service } from 'typedi';
-import { UserRepository } from '../repository/UserRepository';
+import { UserRepository } from '../repository/user.repository';
 import { LoginBody } from '../types/login-body';
 import { RegisterBody } from '../types/register-body';
-import jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
 import { UserResponseInterface } from '../types/user-response';
 import { compare } from 'bcryptjs';
 import * as bcrypt from 'bcryptjs';
-import { CustomError } from '../errors/customError';
+import { CustomError } from '../errors/custom-error';
+import { JWT } from '../helpers/jwt';
 
 dotenv.config();
 
 @Service()
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userRepository: UserRepository, private jwt: JWT) {}
 
   public async login(body: LoginBody) {
     try {
@@ -33,7 +35,7 @@ export class UserService {
         throw new CustomError('Email or Password is incorrect', 400);
       }
 
-      return user;
+      return this.buildUserResponse(user);
     } catch (err) {
       console.log(err);
       throw err;
@@ -42,7 +44,7 @@ export class UserService {
 
   public async register(body: RegisterBody) {
     try {
-      //check if user already exists
+      // Check if user already exists
       const existingUser = await this.userRepository.findBy({
         email: body.email,
       });
@@ -55,29 +57,29 @@ export class UserService {
       // Replace the plain text password with the hashed password
       const userData = { ...body, password: hashedPassword };
       const [id] = await this.userRepository.create(userData);
-      return await this.userRepository.findBy({ id });
+      const user = await this.userRepository.findBy({ id });
+      return this.buildUserResponse(user);
     } catch (err) {
       console.log(err);
       throw err;
     }
   }
 
-  private generateJwtToken = (user: any) => {
-    const SECRET_KEY: string = process.env.JWT_SECRET as string;
-    const options = {
-      expiresIn: 3600000,
+  // Use the JWT class to generate the token
+  private generateJwtToken(user: any) {
+    const payload = {
+      id: user.id,
+      email: user.email,
     };
-    const token = jwt.sign(user, SECRET_KEY, options);
-
-    return token;
-  };
+    return this.jwt.generateToken(payload);
+  }
 
   buildUserResponse(user: any): UserResponseInterface {
     return {
-      user:{
+      user: {
         ...user,
-        token: this.generateJwtToken(user),
       },
+      token: this.generateJwtToken(user),
     };
   }
 }

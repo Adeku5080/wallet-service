@@ -3,7 +3,7 @@ import { Middleware, ExpressMiddlewareInterface } from 'routing-controllers';
 import jwt from 'jsonwebtoken';
 import { JwtPayload } from '../types/jwt-payload'; // Adjust path as per your project structure
 import { Service } from 'typedi';
-import { CustomError } from '../errors/customError';
+import { CustomError } from '../errors/custom-error';
 
 @Service()
 export class AuthMiddleware implements ExpressMiddlewareInterface {
@@ -15,6 +15,7 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
       throw new CustomError('You are not authenticated', 400);
     }
 
+    //todo 401 errors, go over all error codes
     const token = authorizationHeader.split(' ')[1];
     if (!token) {
       throw new CustomError('You are not authenticated', 400);
@@ -27,13 +28,11 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
       }
 
       const payload = jwt.verify(token, secretKey) as JwtPayload;
-      req.headers['id'] = payload.id;
+      req.headers['id'] = payload.id.toString();
       next();
     } catch (err) {
-      console.log('Invalid token:', err);
-      {
-        console.log(err);
-      }
+      throw new CustomError('Invalid token:', 401);
+     
     }
     // next();
   }
