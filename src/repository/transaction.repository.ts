@@ -1,7 +1,7 @@
 import { FindByParams, Repository } from '../interface/repository.interface';
 import knex from 'knex';
 
-import knexConfig from '../../knexfile';
+import knexConfig from '../knexfile';
 import { Service } from 'typedi';
 import { Account } from '../types/acount-type';
 import { User } from '../types/user-type';

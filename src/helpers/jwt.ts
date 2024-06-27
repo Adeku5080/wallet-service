@@ -6,12 +6,12 @@ import { Service } from "typedi";
 export class JWT {
   private secret: string;
   private expiresIn: string;
-  constructor(secret: string, expiresIn: string) {
+  constructor(secret: string) {
     this.secret = process.env.JWT_SECRET as string;
-    this.expiresIn = process.env.JWT_LIFETIME as string;
   }
 
   generateToken(payload: any) {
-    return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn });
+    console.log(this.expiresIn,'xpiresinnnnn')
+    return jwt.sign(payload, this.secret, { expiresIn: 3600 });
   }
 }

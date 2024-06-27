@@ -1,7 +1,7 @@
 import { Service } from 'typedi';
 import knex from 'knex';
 import { Account } from '../types/acount-type';
-import knexConfig from '../../knexfile';
+import knexConfig from '../knexfile';
 import { FindByParams, Repository } from '../interface/repository.interface';
 
 const db = knex(knexConfig.development);

@@ -41,7 +41,7 @@ export class AccountController {
 
   @Patch('/:id/withdraw')
   async withdrawFunds(
-    @Param('id') id: any,
+    @Param('id') id: number,
     @Body() body: updateAccountDto,
     @Res() res: Response,
   ) {
@@ -60,7 +60,7 @@ export class AccountController {
 
   @Patch('/:id/fund')
   async fundAccount(
-    @Param('id') id: any,
+    @Param('id') id: number,
     @Body() body: updateAccountDto,
     @Res() res: Response,
   ) {
@@ -79,7 +79,7 @@ export class AccountController {
 
   @Patch('/:id/transfer')
   async transferFunds(
-    @Param('id') id: any,
+    @Param('id') id: number,
     @Body() body: updateAccountDto,
     @Res() res: Response,
   ) {

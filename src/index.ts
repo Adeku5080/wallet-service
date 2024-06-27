@@ -11,6 +11,7 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
 import { CheckIfUserIsBlacklisted } from './middlewares/check-if-user-is-blacklisted';
 import bodyParser from 'body-parser';
 import { UserController } from './controller/user.controller';
+import { FundingSourceController } from './controller/funding-source.controller';
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ app.use(bodyParser.json());
 // Create express server and register controllers
 useExpressServer(app, {
   routePrefix: '/api',
-  controllers: [UserController, AccountController],
+  controllers: [UserController, AccountController, FundingSourceController],
   middlewares: [AuthMiddleware, CustomErrorHandler, CheckIfUserIsBlacklisted],
   defaultErrorHandler: false, // disable default error handler if using a custom one
 });

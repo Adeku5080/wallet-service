@@ -101,7 +101,6 @@ export class AccountService {
       const transaction = {
         transactionType: 'withdrawal',
         amount: body.amount,
-        userId: id,
         accountId: account.id,
         currency: account.currency,
       };
@@ -147,7 +146,6 @@ export class AccountService {
       const transaction = {
         transactionType: 'withdrawal',
         amount: body.amount,
-        userId: id,
         accountId: account.id,
         currency: account.currency,
       };
@@ -192,7 +190,6 @@ export class AccountService {
       const transaction = {
         transactionType: 'withdrawal',
         amount: body.amount,
-        userId: id,
         accountId: account.id,
         currency: account.currency,
       };
@@ -243,3 +240,10 @@ export class AccountService {
     };
   }
 }
+
+//create a funding source table,fundingTYpe:enum:card:transfers
+//authorization
+//link to user
+//active:active | inactive
+
+//create ,delete and list funding source

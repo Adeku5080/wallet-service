@@ -11,7 +11,6 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
     const authorizationHeader = req.headers['authorization'];
 
     if (!authorizationHeader) {
-      console.log('No authorization header provided');
       throw new CustomError('You are not authenticated', 400);
     }
 
@@ -31,6 +30,7 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
       req.headers['id'] = payload.id.toString();
       next();
     } catch (err) {
+      console.log(err)
       throw new CustomError('Invalid token:', 401);
      
     }
