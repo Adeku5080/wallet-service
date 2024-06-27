@@ -4,7 +4,6 @@ export const checkKarmaForCustomer = async (email: string) => {
   const token = process.env.KARMA_BLACKLIST_TOKEN;
 
   const url = `https://adjutor.lendsqr.com/v2/verification/karma/${email}`;
-  console.log(`Making request to URL: ${url}`);
 
   const config = {
     headers: {

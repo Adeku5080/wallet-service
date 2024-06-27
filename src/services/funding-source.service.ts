@@ -9,7 +9,6 @@ export class FundingSourceService {
   constructor(private fundingSourceRepository: FundingSourceRepository) {}
   public async createFundingSource(body: Card, userId: number) {
     const token = this.tokenizeCard();
-    console.log(token, 'tokenizedtoken');
 
     if (!token) {
       throw new CustomError('failed to create funding source', 500);

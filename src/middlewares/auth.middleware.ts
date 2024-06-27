@@ -30,7 +30,6 @@ export class AuthMiddleware implements ExpressMiddlewareInterface {
       req.headers['id'] = payload.id.toString();
       next();
     } catch (err) {
-      console.log(err)
       throw new CustomError('Invalid token:', 401);
      
     }

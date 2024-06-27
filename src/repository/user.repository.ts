@@ -27,15 +27,5 @@ update() {
     
   }
 
-  // public async login(body: LoginBody) {
-  //   const user = await db('users').where({ email: body.email });
 
-  //   if (!user) {
-  //     console.log('the user with this credential does not exist');
-  //   }
-  // }
-
-  // public async register(body: RegisterBody) {
-
-  // }
 }

@@ -15,6 +15,7 @@ import { AuthMiddleware } from '../middlewares/auth.middleware';
 import { Request, Response } from 'express';
 import { Service } from 'typedi';
 import { updateAccountDto } from '../dto/update-account-dto';
+import { FundAccountDto } from '../dto/fund-account-dto';
 
 @Service()
 @UseBefore(AuthMiddleware)
@@ -61,11 +62,14 @@ export class AccountController {
   @Patch('/:id/fund')
   async fundAccount(
     @Param('id') id: number,
-    @Body() body: updateAccountDto,
+    @Body() body: FundAccountDto,
     @Res() res: Response,
+    @Req() req: Request,
   ) {
     try {
-      const account = await this.accountService.fundAccount(id, body);
+            const { id :userId} = req.headers;
+
+      const account = await this.accountService.fundAccount(id, body,Number(userId));
       const data = this.accountService.buildAccountResponse(account);
       return res.status(200).json({
         status: 'success',
@@ -113,7 +117,6 @@ export class AccountController {
     try {
       const { id } = req.headers;
       const accounts = await this.accountService.getAllAccounts(Number(id));
-      console.log(accounts, 'accounts');
       const data = this.accountService.buildAccountResponse(accounts);
       return res.status(200).json(data);
     } catch (err) {

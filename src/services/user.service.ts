@@ -37,7 +37,6 @@ export class UserService {
 
       return this.buildUserResponse(user);
     } catch (err) {
-      console.log(err);
       throw err;
     }
   }
@@ -60,7 +59,6 @@ export class UserService {
       const user = await this.userRepository.findBy({ id });
       return this.buildUserResponse(user);
     } catch (err) {
-      console.log(err);
       throw err;
     }
   }

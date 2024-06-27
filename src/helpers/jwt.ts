@@ -11,7 +11,6 @@ export class JWT {
   }
 
   generateToken(payload: any) {
-    console.log(this.expiresIn,'xpiresinnnnn')
     return jwt.sign(payload, this.secret, { expiresIn: 3600 });
   }
 }

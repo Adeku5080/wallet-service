@@ -9,6 +9,9 @@ import { AccountResponseInterface } from '../types/account-response';
 import { updateAccountDto } from '../dto/update-account-dto';
 import { CustomError } from '../errors/custom-error';
 import { TransactionRepistory } from '../repository/transaction.repository';
+import { FundingSourceRepository } from '../repository/funding-source.repository';
+import { CreateFundingSourceDto } from '../dto/create-fundig-source-dto';
+import { FundAccountDto } from '../dto/fund-account-dto';
 
 @Service()
 export class AccountService {
@@ -16,6 +19,7 @@ export class AccountService {
     private accountRepository: AccountRepository,
     private userRepository: UserRepository,
     private transactionRepository: TransactionRepistory,
+    private fundingSourceRepository: FundingSourceRepository,
   ) {}
 
   //todo: type for id
@@ -130,8 +134,16 @@ export class AccountService {
     }
   }
 
-  public async fundAccount(id: number, body: updateAccountDto) {
+  public async fundAccount(id: number, body: FundAccountDto, userId: number) {
     try {
+      const fundingSource = await this.fundingSourceRepository.findBy({
+        userId,
+      });
+      if (!fundingSource.token) {
+        throw new CustomError('you do not have an active funding source', 401);
+      }
+      //if the user has a funding source ,that is what we send to payament gateways to authorize payments
+      
       const account = await this.accountRepository.findBy({ id });
       if (!account) {
         throw new CustomError('Account with this Id does not exist', 400);
@@ -226,8 +238,7 @@ export class AccountService {
 
     return account.balance;
   }
-  // todo: account should 10 digit numbers
-  // add bank name and bank code to account table.
+  .
   private generateAccountNumber = () => {
     return Math.floor(1000000000 + Math.random() * 9000000000);
   };
@@ -241,9 +252,3 @@ export class AccountService {
   }
 }
 
-//create a funding source table,fundingTYpe:enum:card:transfers
-//authorization
-//link to user
-//active:active | inactive
-
-//create ,delete and list funding source

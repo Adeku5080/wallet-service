@@ -42,7 +42,6 @@ export class FundingSourceController {
   @Get('/')
   async findAllFundingSources(@Req() req: Request, @Res() res: Response) {
     try {
-      console.log('Adeku');
       const { id: userId } = req.headers;
       const data = await this.fundingSourceService.listFundingSource(
         Number(userId),
@@ -60,7 +59,6 @@ export class FundingSourceController {
     @Res() res: Response,
   ) {
     try {
-      console.log('adeku')
       const { id: userId } = req.headers;
       const data = await this.fundingSourceService.deleteFundingSource(id, Number(userId));
       return res.status(204).json({data});
