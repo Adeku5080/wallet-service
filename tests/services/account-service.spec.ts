@@ -5,6 +5,7 @@ import { AccountController } from '../../src/controller/account.controller';
 import { AccountRepository } from '../../src/repository/account.repository';
 import { AccountService } from '../../src/services/account.service';
 import { updateAccountDto } from '../../src/dto/update-account-dto';
+import { FundAccountDto } from '../../src/dto/fund-account-dto';
 
 describe('AccountService', () => {
   let mockAccountService: AccountService;
@@ -162,27 +163,5 @@ describe('AccountService', () => {
         });
       }
     });
-  });
-
-  describe('fundAccount', () => {});
-  it('should fund account successfully', async () => {
-    const body = req.body as updateAccountDto;
-    const id = 1;
-    const account = {
-      id: 8,
-      accountName: 'adeku ali',
-      accountNumber: 'ACCT-1719330668527-944311',
-      accountType: 'wallet',
-      accountStatus: 1,
-      currency: 'NGN',
-      balance: 0,
-      userId: 65,
-    };
-
-    (mockAccountRepository.findBy as SinonStub)
-      .withArgs({ id })
-      .resolves(account);
-
-    await accountController.fundAccount(id, body, res as Response);
   });
 });

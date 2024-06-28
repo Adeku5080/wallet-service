@@ -1,6 +1,6 @@
 import sinon, { SinonStub } from 'sinon';
 import { Request, Response } from 'express';
-import { AuthController } from '../../src/controller/User';
+import { UserController } from '../../src/controller/user.controller';
 import { UserService } from '../../src/services/user.service';
 import { RegisterDto } from '../../src/dto/register-dto';
 import { LoginDto } from '../../src/dto/login-dto';
@@ -9,7 +9,7 @@ import { compare } from 'bcryptjs';
 
 describe('UserService', () => {
   let mockUserService: UserService;
-  let authController: AuthController;
+  let userController: UserController;
   let mockUserRepository: sinon.SinonStubbedInstance<UserRepository>;
   let req: Partial<Request>;
   let res: Partial<Response>;
@@ -22,7 +22,7 @@ describe('UserService', () => {
       buildUserResponse: sinon.stub(),
     } as any;
 
-    authController = new AuthController(mockUserService);
+    userController = new UserController(mockUserService);
 
     req = {
       body: {
@@ -54,7 +54,7 @@ describe('UserService', () => {
       (mockUserService.register as SinonStub).resolves(user);
       (mockUserService.buildUserResponse as SinonStub).returns(userResponse);
 
-      await authController.register(body, res as Response);
+      await userController.register(body, res as Response);
 
       sinon.assert.calledWith(res.status as SinonStub, 201);
       sinon.assert.calledWith(res.json as SinonStub, userResponse);
@@ -69,7 +69,7 @@ describe('UserService', () => {
         .resolves({ id: 1, email: body.email });
 
       try {
-        await authController.register(body, res as Response);
+        await userController.register(body, res as Response);
       } catch (err) {
         sinon.assert.calledWith(res.status as SinonStub, 400);
         sinon.assert.calledWith(res.json as SinonStub, {
@@ -88,7 +88,7 @@ describe('UserService', () => {
       (mockUserService.login as SinonStub).resolves(user);
       (mockUserService.buildUserResponse as SinonStub).returns(userResponse);
 
-      await authController.login(body, res as Response);
+      await userController.login(body, res as Response);
 
       sinon.assert.calledWith(res.status as SinonStub, 200);
       sinon.assert.calledWith(res.json as SinonStub, userResponse);
@@ -105,10 +105,10 @@ describe('UserService', () => {
         .withArgs({ email: body.email })
         .resolves({ id: 1, email: body.email });
 
-      await authController.login(body, res as Response);
+      await userController.login(body, res as Response);
 
       try {
-        await authController.login(body, res as Response);
+        await userController.login(body, res as Response);
       } catch (err) {
         sinon.assert.calledWith(res.status as SinonStub, 400);
         sinon.assert.calledWith(res.json as SinonStub, {
@@ -131,10 +131,10 @@ describe('UserService', () => {
       const errorMessage = 'email or password is incorrect';
 
       bcryptCompareStub.withArgs(body.password, user.password).resolves(false);
-      await authController.login(body, res as Response);
+      await userController.login(body, res as Response);
 
       try {
-        await authController.login(body, res as Response);
+        await userController.login(body, res as Response);
       } catch (err) {
         sinon.assert.calledWith(res.status as SinonStub, 400);
         sinon.assert.calledWith(res.json as SinonStub, {

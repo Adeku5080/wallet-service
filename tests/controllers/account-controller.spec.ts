@@ -6,7 +6,7 @@ import { AccountController } from '../../src/controller/account.controller';
 import { updateAccountDto } from '../../src/dto/update-account-dto';
 import { AccountService } from '../../src/services/account.service';
 
-chai.use(sinonChai);
+// chai.use(sinonChai);
 
 describe('AccountController', () => {
   let accountController: AccountController;
@@ -129,6 +129,12 @@ describe('AccountController', () => {
         accountName: 'Test Account',
         balance: 500,
       };
+          const fundAccountDto = {
+            amount: 120,
+            bankName: 'gtb',
+            accountNo: 1234568,
+            fundingSourceId: 1,
+          };
       const updatedAccount = { ...account, balance: 600 };
       const accountResponse = { ...updatedAccount };
       const id = 1;
@@ -136,12 +142,14 @@ describe('AccountController', () => {
       (accountService.buildAccountResponse as sinon.SinonStub).returns(
         accountResponse,
       );
+  
 
       // Call controller method under test
       await accountController.fundAccount(
         id,
-        req.body as updateAccountDto,
+        fundAccountDto,
         res as Response,
+        req as Request
       );
 
       // Assertions
@@ -156,14 +164,23 @@ describe('AccountController', () => {
     it('should handle error from fundAccount method and return 500 status', async () => {
       const error = new Error('Funding failed');
       const id = 1;
+        const fundAccountDto = {
+          amount: 120,
+          bankName: 'gtb',
+          accountNo: 1234568,
+          fundingSourceId: 1,
+        };
+      
+      
 
       (accountService.fundAccount as sinon.SinonStub).rejects(error);
 
       try {
         await accountController.fundAccount(
           id,
-          req.body as updateAccountDto,
+          fundAccountDto,
           res as Response,
+          req as Request,
         );
       } catch (err) {
         expect(res.status).to.have.been.calledWith(500);

@@ -1,16 +1,16 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import sinonChai from 'sinon-chai';
+// import sinonChai from 'sinon-chai';
 import { Request, Response } from 'express';
-import { AuthController } from '../../src/controller/User';
 import { RegisterDto } from '../../src/dto/register-dto';
 import { UserService } from '../../src/services/user.service';
 import { LoginDto } from '../../src/dto/login-dto';
+import { UserController } from '../../src/controller/user.controller';
 
-chai.use(sinonChai);
+// chai.use(sinonChai);
 
-describe('AuthController', () => {
-  let authController: AuthController;
+describe('UserController', () => {
+  let userController: UserController;
   let userService: UserService;
   let req: Partial<Request>;
   let res: Partial<Response>;
@@ -23,7 +23,7 @@ describe('AuthController', () => {
       buildUserResponse: sinon.stub(),
     } as any;
 
-    authController = new AuthController(userService);
+    userController = new UserController(userService);
 
     req = {
       body: {
@@ -52,7 +52,7 @@ describe('AuthController', () => {
        (userService.register as sinon.SinonStub).resolves(user);
        (userService.buildUserResponse as sinon.SinonStub).returns(userResponse);
 
-       await authController.register(body, res as Response);
+       await userController.register(body, res as Response);
 
        expect(userService.register).to.have.been.calledWith(body);
        expect(userService.buildUserResponse).to.have.been.calledWith(user);
@@ -67,7 +67,7 @@ describe('AuthController', () => {
        (userService.register as sinon.SinonStub).rejects(error);
 
        try {
-         await authController.register(body, res as Response);
+         await userController.register(body, res as Response);
        } catch (err) {
          expect(res.status).to.have.been.calledWith(500);
          expect(res.json).to.have.been.calledWith({ error: error.message });
@@ -84,7 +84,7 @@ describe('AuthController', () => {
        (userService.login as sinon.SinonStub).resolves(user);
        (userService.buildUserResponse as sinon.SinonStub).returns(userResponse);
 
-       await authController.login(body, res as Response);
+       await userController.login(body, res as Response);
 
        expect(userService.login).to.have.been.calledWith(body);
        expect(userService.buildUserResponse).to.have.been.calledWith(user);
@@ -100,7 +100,7 @@ describe('AuthController', () => {
     (userService.login as sinon.SinonStub).rejects(error);
 
     try {
-      await authController.login(body, res as Response);
+      await userController.login(body, res as Response);
     } catch (err) {
       expect(res.status).to.have.been.calledWith(500);
       expect(res.json).to.have.been.calledWith({ error: error.message });
