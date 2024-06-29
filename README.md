@@ -17,6 +17,7 @@ The Wallet Service is a RESTful API that allows users to manage their wallet acc
 - **Express**: Web framework for Node.js.
 - **TypeScript**: Typed superset of JavaScript.
 - **Knex js**: Query builder for MYSQL.
+- **Routing-Controllers**: To create controller classes with methods as actions that handle requests..
 - **Mocha & Chai**: Testing framework and assertion library.
 - **Sinon**: Test spies, stubs, and mocks.
 - **bcryptjs**: Library for hashing passwords.
