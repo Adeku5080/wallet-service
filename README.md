@@ -24,7 +24,7 @@ The Wallet Service is a RESTful API that allows users to manage their wallet acc
 - **SQL**: Relational database.
 
 ## Installation
-
+   
 1. **Clone the repository**:
 
    ```bash

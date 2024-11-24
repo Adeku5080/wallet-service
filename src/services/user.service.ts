@@ -5,7 +5,6 @@ import { UserRepository } from '../repository/user.repository';
 import { LoginBody } from '../types/login-body';
 import { RegisterBody } from '../types/register-body';
 import * as dotenv from 'dotenv';
-import { UserResponseInterface } from '../types/user-response';
 import { compare } from 'bcryptjs';
 import * as bcrypt from 'bcryptjs';
 import { CustomError } from '../errors/custom-error';
@@ -35,7 +34,12 @@ export class UserService {
         throw new CustomError('Email or Password is incorrect', 400);
       }
 
-      return this.buildUserResponse(user);
+      const token = this.generateJwtToken(user);
+
+      return {
+        user,
+        token,
+      };
     } catch (err) {
       throw err;
     }
@@ -55,9 +59,13 @@ export class UserService {
 
       // Replace the plain text password with the hashed password
       const userData = { ...body, password: hashedPassword };
-      const [id] = await this.userRepository.create(userData);
-      const user = await this.userRepository.findBy({ id });
-      return this.buildUserResponse(user);
+      const user = await this.userRepository.create(userData);
+
+      const token = this.generateJwtToken(user);
+      return {
+        user,
+        token,
+      };
     } catch (err) {
       throw err;
     }
@@ -69,16 +77,7 @@ export class UserService {
       id: user.id,
       email: user.email,
     };
-    
-    return this.jwt.generateToken(payload);
-  }
 
-  buildUserResponse(user: any): UserResponseInterface {
-    return {
-      user: {
-        ...user,
-      },
-      token: this.generateJwtToken(user),
-    };
+    return this.jwt.generateToken(payload);
   }
 }

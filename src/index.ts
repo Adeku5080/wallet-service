@@ -4,7 +4,7 @@ import 'reflect-metadata';
 import { Container } from 'typedi';
 import { useExpressServer, useContainer } from 'routing-controllers';
 import { AccountController } from './controller/account.controller';
-import { TransactionController } from './controller/transaction.controller';
+// import { TransactionController } from './controller/transaction.controller';
 import 'express-async-errors';
 import { CustomErrorHandler } from './middlewares/error';
 import { AuthMiddleware } from './middlewares/auth.middleware';
@@ -18,7 +18,7 @@ dotenv.config();
 useContainer(Container);
 
 const app: Application = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 
 // Use the JSON body parser middleware globally
 app.use(bodyParser.json());

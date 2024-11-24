@@ -18,7 +18,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Post('/register')
-  @UseBefore(CheckIfUserIsBlacklisted)
+  // @UseBefore(CheckIfUserIsBlacklisted)
   async register(@Body() body: RegisterDto, @Res() res: Response) {
     try {
       const data = await this.userService.register(body);
@@ -34,7 +34,7 @@ export class UserController {
   }
 
   @Post('/login')
-  async login(@Body() body: LoginDto, @Res() res: Response) {
+  async login(@Body() body: LoginDto, @Res() res: Response) {                                      
     try {
       const data = await this.userService.login(body);
       //todo: build in service
