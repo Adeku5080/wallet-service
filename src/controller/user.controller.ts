@@ -10,7 +10,9 @@ import { LoginDto } from '../dto/login-dto';
 import { RegisterDto } from '../dto/register-dto';
 import { Service } from 'typedi';
 import { Response } from 'express';
+import { plainToInstance } from 'class-transformer';
 import { CheckIfUserIsBlacklisted } from '../middlewares/check-if-user-is-blacklisted';
+import { validateOrReject } from 'class-validator';
 
 @Service()
 @JsonController('/auth')
@@ -29,6 +31,7 @@ export class UserController {
         data,
       });
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
