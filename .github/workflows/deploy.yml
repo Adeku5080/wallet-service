@@ -1,4 +1,4 @@
-name: Deploy to Ubuntu Server
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,13 +6,28 @@ on:
       - master
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Tests
+      run: npm test  # This runs your Jest or Mocha tests
+
+  deploy:
+    needs: build  # This ensures deployment happens only if tests pass
+    runs-on: ubuntu-latest
+
+    steps:
     - name: Setup SSH Key
       run: |
         mkdir -p ~/.ssh
@@ -22,8 +37,10 @@ jobs:
 
     - name: Deploy to Server
       run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /
-          chmod +x deploy.sh
-          ./deploy.sh
+        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd /your-app-folder
+          git pull origin master
+          npm install --production
+          pm2 restart all
         EOF
+
