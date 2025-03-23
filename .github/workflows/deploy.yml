@@ -22,9 +22,8 @@ jobs:
 
     - name: Deploy to Server
       run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /var/www/wallet-service
-          git pull origin master
-          npm install  
-          pm2 restart all  # If using PM2 for Node.js
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          cd /
+          chmod +x deploy.sh
+          ./deploy.sh
         EOF
