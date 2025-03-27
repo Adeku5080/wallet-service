@@ -1,0 +1,10 @@
+version: '3'
+services:
+  wallet-service:
+     image:wallet-service
+
+  mysql:
+    image: mysql
+    ports:
+      - 3307:3306 
+        

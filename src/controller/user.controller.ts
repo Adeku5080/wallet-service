@@ -10,7 +10,9 @@ import { LoginDto } from '../dto/login-dto';
 import { RegisterDto } from '../dto/register-dto';
 import { Service } from 'typedi';
 import { Response } from 'express';
+import { plainToInstance } from 'class-transformer';
 import { CheckIfUserIsBlacklisted } from '../middlewares/check-if-user-is-blacklisted';
+import { validateOrReject } from 'class-validator';
 
 @Service()
 @JsonController('/auth')
@@ -18,7 +20,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Post('/register')
-  @UseBefore(CheckIfUserIsBlacklisted)
+  // @UseBefore(CheckIfUserIsBlacklisted)
   async register(@Body() body: RegisterDto, @Res() res: Response) {
     try {
       const data = await this.userService.register(body);
@@ -29,12 +31,13 @@ export class UserController {
         data,
       });
     } catch (error) {
+      console.log(error);
       throw error;
     }
   }
 
   @Post('/login')
-  async login(@Body() body: LoginDto, @Res() res: Response) {
+  async login(@Body() body: LoginDto, @Res() res: Response) {                                      
     try {
       const data = await this.userService.login(body);
       //todo: build in service

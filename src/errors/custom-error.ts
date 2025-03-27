@@ -1,7 +1,7 @@
 export class CustomError extends Error {
   public statusCode: number;
   public status: string;
-  public isOperational: boolean; // Mark this error as operational
+  public isOperational: boolean; 
 
   constructor(message: string, statusCode: number) {
     super(message);
