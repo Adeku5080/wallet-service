@@ -38,7 +38,7 @@ jobs:
     - name: Deploy to Server
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /your-app-folder
+          cd /var/www/wallet-service
           git pull origin master
           npm install --production
           pm2 restart all
