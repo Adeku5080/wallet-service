@@ -9,38 +9,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Install Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
 
-    - name: Install Dependencies
-      run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-    - name: Run Tests
-      run: npm test  # This runs your Jest or Mocha tests
+      - name: Run Tests
+        run: npm test  # Runs Jest or Mocha tests
 
   deploy:
-    needs: build  # This ensures deployment happens only if tests pass
+    needs: build  # Ensures deployment happens only if tests pass
     runs-on: ubuntu-latest
 
     steps:
-    - name: Setup SSH Key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH}}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/github_actions_key
+          chmod 600 ~/.ssh/github_actions_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-    - name: Deploy to Server
-      run: |
-        ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /var/www/wallet-service
-          git pull origin master
-          npm install --production
-          pm2 restart all
-        EOF
-
+      - name: Deploy to Server
+        run: |
+          ssh -i ~/.ssh/github_actions_key -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+              cd /var/www/wallet-service
+              git pull origin master
+              npm install --production
+              pm2 restart all
+          EOF
