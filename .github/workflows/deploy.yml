@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Tests
+        run: npm test  # Runs Jest or Mocha tests
+
+  deploy:
+    needs: build  # Ensures deployment happens only if tests pass
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/git_action_rsa
+          chmod 600 ~/.ssh/git_action_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to Server
+        run: |
+          ssh -i ~/.ssh/git_action_rsa -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+              echo "Changing to project directory"
+              cd /var/www/wallet-service || exit 1
+
+              echo "Setting up SSH for GitHub"
+              export GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy_key -o StrictHostKeyChecking=no"
+
+              echo "Pulling latest changes from GitHub"
+              git pull origin master || exit 1
+
+              echo "Installing production dependencies"
+              npm install --production || exit 1
+
+              echo "Restarting PM2 processes"
+              pm2 restart all || exit 1
+          EOF
