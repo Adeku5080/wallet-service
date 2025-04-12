@@ -28,10 +28,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup SSH Key
+      - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/git_action_rsa
+          printf "%s\n" "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/git_action_rsa
           chmod 600 ~/.ssh/git_action_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
@@ -39,11 +39,8 @@ jobs:
         run: |
           ssh -i ~/.ssh/git_action_rsa -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-              echo "Changing to project directory"
+              echo "Switching to project directory"
               cd /var/www/wallet-service || exit 1
-
-              echo "Setting up SSH for GitHub"
-              export GIT_SSH_COMMAND="ssh -i ~/.ssh/github_deploy_key -o StrictHostKeyChecking=no"
 
               echo "Pulling latest changes from GitHub"
               git pull origin master || exit 1
@@ -51,6 +48,9 @@ jobs:
               echo "Installing production dependencies"
               npm install --production || exit 1
 
-              echo "Restarting PM2 processes"
-              pm2 restart all || exit 1
+              echo "⚙️  Running migrations"
+              NODE_ENV=production npx knex migrate:latest --env production || exit 1
+
+              echo "🚀 Restarting PM2"
+              pm2 restart wallet-service || pm2 start dist/index.js --name wallet-service || exit 1
           EOF
