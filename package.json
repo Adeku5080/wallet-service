@@ -4,20 +4,57 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "start": "node dist/index.js"
+    "build": "npx tsc",
+    "test": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --require ts-node/register 'tests/**/*.ts'",
+    "knex": "ts-node knexfile.ts",
+    "migrate": "knex --knexfile knexfile.ts migrate:latest --env development",
+    "migrate:prod": "knex --knexfile knexfile.ts migrate:latest --env production",
+    "rollback": "knex --knexfile knexfile.ts migrate:rollback --env development",
+    "rollback:prod": "knex --knexfile knexfile.ts migrate:rollback --env production",
+    "migrate:make": "knex --knexfile knexfile.ts migrate:make --env development --extension ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.19.2",
-    "typescript": "^5.4.5"
+    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/body-parser": "^1.19.5",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/sinon": "^17.0.3",
+    "@types/sinon-chai": "^3.2.12",
+    "axios": "^1.7.2",
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "class-validator": "^0.14.1",
+    "dotenv": "^16.4.5",
+    "express-async-errors": "^3.1.1",
+    "express-validator": "^7.1.0",
+    "ioredis": "^5.4.1",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.1.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.10.1",
+    "reflect-metadata": "^0.2.2",
+    "routing-controllers": "^0.10.4",
+    "sinon": "^18.0.0",
+    "sinon-chai": "^3.7.0",
+    "typedi": "^0.10.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.16",
     "@types/express": "^4.17.21",
-    "@types/node": "^20.14.6",
-    "nodemon": "^3.1.4"
+    "@types/ioredis": "^5.0.0",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^20.14.8",
+    "cross-env": "^7.0.3",
+    "express": "^4.19.2",
+    "mocha": "^10.5.1",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.2"
   }
 }
