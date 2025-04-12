@@ -8,10 +8,12 @@
     "dev": "nodemon src/index.ts",
     "build": "npx tsc",
     "test": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --require ts-node/register 'tests/**/*.ts'",
-    "knex": "knex --knexfile knexfile.ts",
-    "rollback": "npm run knex migrate:rollback",
-    "migrate:make": "npm run knex migrate:make -- -x ts",
-    "migrate": "npm run knex migrate:latest"
+    "knex": "ts-node knexfile.ts",
+    "migrate": "knex --knexfile knexfile.ts migrate:latest --env development",
+    "migrate:prod": "knex --knexfile knexfile.ts migrate:latest --env production",
+    "rollback": "knex --knexfile knexfile.ts migrate:rollback --env development",
+    "rollback:prod": "knex --knexfile knexfile.ts migrate:rollback --env production",
+    "migrate:make": "knex --knexfile knexfile.ts migrate:make --env development --extension ts"
   },
   "keywords": [],
   "author": "",
