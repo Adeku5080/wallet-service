@@ -37,7 +37,7 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          ssh -i ~/.ssh/wallet_service_ci -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -i ~/.ssh/wallet_service_ci -o StrictHostKeyChecking=no root@${{ secrets.SSH_HOST }} << 'EOF'
             cd /var/www/wallet-service || exit 1
             git pull origin master || exit 1
             npm install --production || exit 1
