@@ -26,21 +26,18 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/wallet_service_ci
+          chmod 600 ~/.ssh/wallet_service_ci
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Test SSH Connection
-        run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo SSH Connection Successful"
 
       - name: Deploy to Server
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+          ssh -i ~/.ssh/wallet_service_ci -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /var/www/wallet-service || exit 1
             git pull origin master || exit 1
             npm install --production || exit 1
