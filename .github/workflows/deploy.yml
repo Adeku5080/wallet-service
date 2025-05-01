@@ -44,3 +44,4 @@ jobs:
             NODE_ENV=production npx knex migrate:latest --env production || exit 1
             pm2 restart wallet-service || pm2 start dist/index.js --name wallet-service || exit 1
           EOF
+
