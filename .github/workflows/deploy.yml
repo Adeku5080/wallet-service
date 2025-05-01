@@ -21,36 +21,26 @@ jobs:
         run: npm install
 
       - name: Run Tests
-        run: npm test  # Runs Jest or Mocha tests
+        run: npm test
 
   deploy:
-    needs: build  # Ensures deployment happens only if tests pass
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Set up SSH key
+      - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          printf "%s\n" "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/git_action_rsa
-          chmod 600 ~/.ssh/git_action_rsa
+          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to Server
         run: |
-          ssh -i ~/.ssh/git_action_rsa -o StrictHostKeyChecking=no \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-              echo "Switching to project directory"
-              cd /var/www/wallet-service || exit 1
-
-              echo "Pulling latest changes from GitHub"
-              git pull origin master || exit 1
-
-              echo "Installing production dependencies"
-              npm install --production || exit 1
-
-              echo "⚙️  Running migrations"
-              NODE_ENV=production npx knex migrate:latest --env production || exit 1
-
-              echo "🚀 Restarting PM2"
-              pm2 restart wallet-service || pm2 start dist/index.js --name wallet-service || exit 1
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /var/www/wallet-service || exit 1
+            git pull origin master || exit 1
+            npm install --production || exit 1
+            NODE_ENV=production npx knex migrate:latest --env production || exit 1
+            pm2 restart wallet-service || pm2 start dist/index.js --name wallet-service || exit 1
           EOF
