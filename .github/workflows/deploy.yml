@@ -10,15 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20.x'
+          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run Tests
         run: npm test
@@ -26,31 +27,47 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.WALLET_SERVICE_GITHUB_ACTION_SSH }}" > ~/.ssh/wallet_service_ci
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/wallet_service_ci
           chmod 600 ~/.ssh/wallet_service_ci
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: Test SSH Connection
-        run: ssh -v -i ~/.ssh/wallet_service_ci root@${{ secrets.SSH_HOST }} echo "SSH connection successful"
+        run: ssh -i ~/.ssh/wallet_service_ci root@${{ secrets.SSH_HOST }} echo "SSH connection verified"
 
       - name: Deploy to Server
         run: |
-          ssh -v -i ~/.ssh/wallet_service_ci -o StrictHostKeyChecking=no root@${{ secrets.SSH_HOST }} << 'EOF'
-            set -e  # Exit immediately if any command fails
-            cd /var/www/wallet-service
-            echo "-- Pulling latest code --"
-            git pull origin master
-            echo "-- Installing dependencies --"
-            npm install --production
-            echo "-- Running migrations --"
+          ssh -i ~/.ssh/wallet_service_ci root@${{ secrets.SSH_HOST }} << 'EOF'
+            # Set up environment
             export NODE_ENV=production
+            export GIT_SSH_COMMAND="ssh -i /root/.ssh/github_deploy_key -o IdentitiesOnly=yes"
+
+            # Navigate to project directory
+            cd /var/www/wallet-service || exit 1
+
+            # Maintenance sequence
+            echo "-- Updating codebase --"
+            git fetch --all
+            git reset --hard origin/master
+            git clean -fd
+
+            echo "-- Installing dependencies --"
+            npm ci --production --prefer-offline
+
+            echo "-- Running migrations --"
             npx knex migrate:latest --env production
-            echo "-- Restarting service --"
-            pm2 restart wallet-service || pm2 start dist/index.js --name wallet-service
-            echo "-- Deployment successful --"
+
+            echo "-- Restarting application --"
+            pm2 delete wallet-service || true
+            pm2 start dist/index.js --name wallet-service --env production
+            pm2 save
+
+            echo "-- Cleaning up --"
+            npm cache clean --force
+            echo "✅ Deployment successful"
           EOF
