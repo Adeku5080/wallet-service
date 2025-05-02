@@ -1,18 +1,37 @@
-import express, { Express, Request, Response, Application } from "express";
-import * as dotenv from "dotenv";
+import express, { Application } from 'express';
+import * as dotenv from 'dotenv';
+import 'reflect-metadata';
+import { Container } from 'typedi';
+import { useExpressServer, useContainer } from 'routing-controllers';
+import { AccountController } from './controller/account.controller';
+// import { TransactionController } from './controller/transaction.controller';
+import 'express-async-errors';
+import { CustomErrorHandler } from './middlewares/error';
+import { AuthMiddleware } from './middlewares/auth.middleware';
+import { CheckIfUserIsBlacklisted } from './middlewares/check-if-user-is-blacklisted';
+import bodyParser from 'body-parser';
+import { UserController } from './controller/user.controller';
+import { FundingSourceController } from './controller/funding-source.controller';
 
-//For env File
 dotenv.config();
+
+useContainer(Container);
 
 const app: Application = express();
 const port = process.env.PORT || 8000;
 
-app.use(express.json());
+// Use the JSON body parser middleware globally
+app.use(bodyParser.json());
 
-//connect to db
+// Create express server and register controllers
+useExpressServer(app, {
+  routePrefix: '/api',
+  controllers: [UserController, AccountController, FundingSourceController],
+  middlewares: [AuthMiddleware, CustomErrorHandler, CheckIfUserIsBlacklisted],
+  defaultErrorHandler: false, // disable default error handler if using a custom one
+});
 
-//routes
-
+// Start the server
 app.listen(port, () => {
-  console.log(`Server starting at port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });

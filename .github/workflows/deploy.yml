@@ -1,0 +1,93 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm test
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | awk 'NR==1{sub(/^\xef\xbb\xbf/,"")} {print}' > ~/.ssh/wallet_service_ci
+          chmod 600 ~/.ssh/wallet_service_ci
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Validate Key Format
+        run: |
+          echo "--- Key Validation ---"
+          file ~/.ssh/wallet_service_ci
+          ssh-keygen -l -f ~/.ssh/wallet_service_ci
+          ssh-keygen -y -f ~/.ssh/wallet_service_ci > ~/.ssh/public_key
+          echo "Public key:"
+          cat ~/.ssh/public_key
+
+      - name: Test SSH Connection
+        run: |
+          ssh -vvv -o IdentitiesOnly=yes \
+              -i ~/.ssh/wallet_service_ci \
+              -o HostKeyAlgorithms=ssh-ed25519 \
+              -o PubkeyAcceptedKeyTypes=ssh-ed25519 \
+              root@${{ secrets.SSH_HOST }} \
+              "echo 'SSH connection successful'; exit 0"
+
+      - name: Deploy to Server
+        run: |
+          ssh -i ~/.ssh/wallet_service_ci \
+              -o StrictHostKeyChecking=no \
+              -o LogLevel=DEBUG3 \
+              root@${{ secrets.SSH_HOST }} << 'EOF'
+            # Server-side environment
+            set -exo pipefail
+            
+            # GitHub deploy key setup
+            export GIT_SSH_COMMAND="ssh -i /root/.ssh/github_deploy_key -o IdentitiesOnly=yes"
+            
+            # Application directory
+            cd /var/www/wallet-service
+            
+            # Code update
+            git fetch origin
+            git reset --hard origin/master
+            git clean -fd -e node_modules
+            
+            # Dependency management
+            npm ci --production --audit=false --fund=false
+            
+            # Database migrations
+            NODE_ENV=production npx knex migrate:latest
+            
+            # Process management
+            pm2 delete wallet-service || true
+            pm2 start dist/index.js --name wallet-service --env production
+            pm2 save
+            
+            # Cleanup
+            npm cache clean --force
+            echo "🚀 Deployment completed successfully"
+            
+            EOF
