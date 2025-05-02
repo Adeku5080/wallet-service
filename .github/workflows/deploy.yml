@@ -33,41 +33,61 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/wallet_service_ci
+          # Use awk to remove potential CR characters
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | awk 'NR==1{sub(/^\xef\xbb\xbf/,"")} {print}' > ~/.ssh/wallet_service_ci
           chmod 600 ~/.ssh/wallet_service_ci
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Validate Key Format
+        run: |
+          echo "--- Key Validation ---"
+          file ~/.ssh/wallet_service_ci
+          ssh-keygen -l -f ~/.ssh/wallet_service_ci
+          ssh-keygen -y -f ~/.ssh/wallet_service_ci > ~/.ssh/public_key
+          echo "Public key:"
+          cat ~/.ssh/public_key
+
       - name: Test SSH Connection
-        run: ssh -i ~/.ssh/wallet_service_ci root@${{ secrets.SSH_HOST }} echo "SSH connection verified"
+        run: |
+          ssh -vvv -o IdentitiesOnly=yes \
+              -i ~/.ssh/wallet_service_ci \
+              -o HostKeyAlgorithms=ssh-ed25519 \
+              -o PubkeyAcceptedKeyTypes=ssh-ed25519 \
+              root@${{ secrets.SSH_HOST }} \
+              "echo 'SSH connection successful'; exit 0"
 
       - name: Deploy to Server
         run: |
-          ssh -i ~/.ssh/wallet_service_ci root@${{ secrets.SSH_HOST }} << 'EOF'
-            # Set up environment
-            export NODE_ENV=production
+          ssh -i ~/.ssh/wallet_service_ci \
+              -o StrictHostKeyChecking=no \
+              -o LogLevel=DEBUG3 \
+              root@${{ secrets.SSH_HOST }} << 'EOF'
+            # Server-side environment
+            set -exo pipefail
+            
+            # GitHub deploy key setup
             export GIT_SSH_COMMAND="ssh -i /root/.ssh/github_deploy_key -o IdentitiesOnly=yes"
-
-            # Navigate to project directory
-            cd /var/www/wallet-service || exit 1
-
-            # Maintenance sequence
-            echo "-- Updating codebase --"
-            git fetch --all
+            
+            # Application directory
+            cd /var/www/wallet-service
+            
+            # Code update
+            git fetch origin
             git reset --hard origin/master
-            git clean -fd
-
-            echo "-- Installing dependencies --"
-            npm ci --production --prefer-offline
-
-            echo "-- Running migrations --"
-            npx knex migrate:latest --env production
-
-            echo "-- Restarting application --"
+            git clean -fd -e node_modules
+            
+            # Dependency management
+            npm ci --production --audit=false --fund=false
+            
+            # Database migrations
+            NODE_ENV=production npx knex migrate:latest
+            
+            # Process management
             pm2 delete wallet-service || true
             pm2 start dist/index.js --name wallet-service --env production
             pm2 save
-
-            echo "-- Cleaning up --"
+            
+            # Cleanup
             npm cache clean --force
-            echo "✅ Deployment successful"
-          EOF
+            echo "🚀 Deployment completed successfully"
+EOF
