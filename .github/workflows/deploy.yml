@@ -33,7 +33,6 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          # Use awk to remove potential CR characters
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | awk 'NR==1{sub(/^\xef\xbb\xbf/,"")} {print}' > ~/.ssh/wallet_service_ci
           chmod 600 ~/.ssh/wallet_service_ci
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
